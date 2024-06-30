@@ -65,7 +65,7 @@ int main() {
         total_inside += flummoxes[k];
     }
     
-    long double pi = num_threads * (static_cast<long double>(total_inside) / (num_samples * num_threads));
+    long double pi = (static_cast<long double>(total_inside) / (num_samples * ((long) pow(2, (log2(num_threads) - 2)))));
 
     std::cout << "After " << num_samples << " iterations on each of " << num_threads << " threads, the value of pi = " << pi << std::endl;
 
