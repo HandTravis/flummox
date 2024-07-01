@@ -3,6 +3,7 @@
 #include <random>
 #include <cmath>
 #include <pthread.h>
+#include <chrono>
 
 struct ThreadData {
     int* result;
@@ -49,13 +50,23 @@ int main(int argc, char *argv[]) {
     pthread_t threads[num_threads];
     std::vector<ThreadData> thread_data(num_threads);
 
+    // create tools to time calculation of pi
+    long double elapsed_time = 0.0L;
+    std::vector<long double> t_performance;
+
     int total_inside = 0;
 
     // Create threads and pass indices of vectors by reference
     for (int i = 0; i < num_threads; ++i) {
         thread_data[i].result = &flummoxes[i];
         thread_data[i].num_samples = num_samples / num_threads; // Divide samples among threads
+
+        auto start = std::chrono::high_resolution_clock::now();
         pthread_create(&threads[i], NULL, calculate_orthant, (void*)&thread_data[i]);
+        auto end = std::chrono::high_resolution_clock::now();
+        
+        auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() * 1.e-9;
+        elapsed_time += duration;
     }
 
     // Join threads
@@ -67,10 +78,12 @@ int main(int argc, char *argv[]) {
     for (int k = 0; k < num_threads; k++) {
         total_inside += flummoxes[k];
     }
-    
-    long double pi = (static_cast<long double>(total_inside) / num_samples  * ((long) pow(2, (log2(num_threads) - 2)))) ;
 
-    std::cout << "After " << num_samples << " iterations with " << num_threads << " threads, the value of pi = " << pi << std::endl;
+    long double average_time = elapsed_time / (long) num_threads;
+    
+    long double pi = 4 * (static_cast<long double>(total_inside) / (num_samples));
+
+    std::cout << "After " << num_samples << " iterations with \t" << num_threads << "\t threads across \t" << average_time << "\t seconds, the value of pi = " << pi << std::endl;
 
     return 0;
 }
